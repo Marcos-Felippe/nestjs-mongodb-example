@@ -6,6 +6,8 @@ import {
   Put,
   Param,
   Delete,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -17,6 +19,14 @@ export class UsersController {
 
   @Post()
   async create(@Body() createUserDto: CreateUserDto) {
+
+    if (!createUserDto.name || !createUserDto.email || !createUserDto.password) {
+      throw new HttpException(
+        'Dados faltantes',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    
     return await this.usersService.create(createUserDto);
   }
 
@@ -32,6 +42,14 @@ export class UsersController {
 
   @Put(':id')
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+
+    if (!updateUserDto.name || !updateUserDto.email || !updateUserDto.password) {
+      throw new HttpException(
+        'Dados faltantes',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    
     return await this.usersService.update(id, updateUserDto);
   }
 

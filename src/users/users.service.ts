@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -10,38 +10,64 @@ export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
+
     const user = new this.userModel(createUserDto);
 
     return user.save();
   }
 
-  findAll() {
-    const users = this.userModel.find();
+  async findAll() {
+    const users = await this.userModel.find();
 
     return users;
   }
 
-  findOne(id: string) {
-    const user = this.userModel.findById(id);
+  async findOne(id: string) {
+    try {
+      const user = await this.userModel.findById(id);
 
-    return user;
+      return user;
+    } catch (err) {
+      console.log(err);
+      throw new HttpException(
+        `Usuario ${id} não encontrado`,
+        HttpStatus.NOT_FOUND,
+      );
+    }
   }
 
-  update(id: string, updateUserDto: UpdateUserDto) {
-    const user = this.userModel
-      .findByIdAndUpdate(id, updateUserDto)
-      .setOptions({ new: true });
+  async update(id: string, updateUserDto: UpdateUserDto) {
 
-    return user;
+    try {
+      const user = await this.userModel
+        .findByIdAndUpdate(id, updateUserDto)
+        .setOptions({ new: true });
+
+      return user;
+    } catch (err) {
+      console.log(err);
+      throw new HttpException(
+        `Erro ao tentar atualizar o usuario ${id}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   async remove(id: string) {
-    const delUser = await this.userModel
-      .deleteOne({
-        _id: id,
-      })
-      .exec();
+    try {
+      const delUser = await this.userModel
+        .deleteOne({
+          _id: id,
+        })
+        .exec();
 
-    return delUser;
+      return delUser;
+    } catch (err) {
+      console.log(err);
+      throw new HttpException(
+        `Erro ao tentar deletar o usuario ${id}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }
